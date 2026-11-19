@@ -5,7 +5,7 @@ Replication, Ablation and Failure Analysis of QoS-MDPSO**
 
 Repository: https://github.com/Kanishk77295/QA-FA-QoS-MDPSO
 
-Authors: Vatsal Sharma (2024UIN3308), Harshit (2024UIN3307), Kanishk Gupta (2024UIN3357)
+Authors: Vatsal Sharma, Harshit, Kanishk Gupta
 Department of Information Technology, Netaji Subhas University of Technology, Main Campus, Delhi, India.
 
 This project re-implements QoS-MDPSO (Ouyang & Zhang, *Cluster Computing* 28:727, 2025,
