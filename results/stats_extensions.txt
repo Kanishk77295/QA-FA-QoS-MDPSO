@@ -1,0 +1,60 @@
+===== ABLATION (task-count sweep 40-120, 10 seeds, paper fitness; mean over 50 runs) =====
+                      paper_fitness  makespan_h     tec      tc  deadline_miss_true    evals  runtime_s
+variant                                                                                                
+Full QoS-MDPSO               10.950      22.571  39.177  23.186               26.66  18030.0      0.176
+no chaotic w                 12.307      21.533  40.402  23.216               18.40  18030.0      0.181
+no spbest                    10.295      22.862  38.644  22.684               25.62  18030.0      0.173
+no mbest                     11.527      27.578  38.747  23.022               30.70  18030.0      0.174
+no adaptive position         12.757      21.365  41.441  23.483               15.72  12030.0      0.128
+no worst replacement         12.390      27.721  38.746  22.084               33.88  12030.0      0.120
+all five off                 13.418      23.605  41.226  22.923               21.14   6030.0      0.057
+
+Change vs Full when the mechanism is REMOVED (positive fitness change = removal hurts)
+   no chaotic w           fitness  +12.39%   median diff  +0.527   p = 4.76e-03
+   no spbest              fitness   -5.98%   median diff  -0.488   p = 5.77e-03
+   no mbest               fitness   +5.27%   median diff  +0.299   p = 7.90e-03
+   no adaptive position   fitness  +16.50%   median diff  +1.291   p = 8.81e-04
+   no worst replacement   fitness  +13.14%   median diff  +0.928   p = 1.01e-03
+   all five off           fitness  +22.54%   median diff  +2.166   p = 1.49e-08
+
+===== FAILURES, scenario 'paper' (task-count sweep, 10 seeds, 200 MC each; mean over 50) =====
+                                        tc  deadline_miss_true  success_rate  crit_weighted_success  lost_tasks  lost_critical  eff_makespan_h  eff_cost  eff_deadline_miss
+algorithm                                                                                                                                                                  
+Min-Min                             19.063                3.80         0.727                  0.723      21.640          7.030          25.055    74.025             36.966
+DPSO                                23.454               22.66         0.796                  0.820      16.372          4.172          51.145    70.980             43.777
+QoS-MDPSO                           23.186               26.66         0.788                  0.800      16.595          4.589          45.375    66.998             47.493
+QA-QoS-MDPSO (ours)                 20.400               15.48         0.745                  0.752      20.152          6.102          41.992    70.751             43.558
+FA-QoS-MDPSO (ours, failure-aware)  25.087               21.34         0.843                  0.848      12.327          3.552          37.993    65.447             40.688
+-- Wilcoxon vs QoS-MDPSO (paired by n_tasks, seed)
+   QA-QoS-MDPSO success_rate         median diff   -0.038  p = 6.73e-06
+   QA-QoS-MDPSO lost_tasks           median diff   +2.770  p = 1.10e-05
+   QA-QoS-MDPSO eff_makespan_h       median diff   -0.985  p = 1.63e-01
+   QA-QoS-MDPSO eff_cost             median diff   +2.117  p = 2.69e-05
+   QA-QoS-MDPSO eff_deadline_miss    median diff   -1.583  p = 1.03e-02
+   FA-QoS-MDPSO success_rate         median diff   +0.034  p = 1.52e-05
+   FA-QoS-MDPSO lost_tasks           median diff   -2.617  p = 3.04e-05
+   FA-QoS-MDPSO eff_makespan_h       median diff   -6.635  p = 1.84e-03
+   FA-QoS-MDPSO eff_cost             median diff   -1.102  p = 2.18e-02
+   FA-QoS-MDPSO eff_deadline_miss    median diff   -4.432  p = 2.67e-06
+-- Correlation across all runs: TC vs success_rate  r = 0.889 (TC per task)
+
+===== FAILURES, scenario 'reliable' (task-count sweep, 10 seeds, 200 MC each; mean over 50) =====
+                                        tc  deadline_miss_true  success_rate  crit_weighted_success  lost_tasks  lost_critical  eff_makespan_h  eff_cost  eff_deadline_miss
+algorithm                                                                                                                                                                  
+Min-Min                             38.312                3.80           1.0                    1.0       0.021          0.007          11.194    41.723              5.074
+DPSO                                38.396               19.28           1.0                    1.0       0.020          0.006          24.399    42.583             20.787
+QoS-MDPSO                           38.476               22.92           1.0                    1.0       0.020          0.006          24.495    40.437             24.334
+QA-QoS-MDPSO (ours)                 38.425               14.80           1.0                    1.0       0.022          0.007          20.529    41.098             17.067
+FA-QoS-MDPSO (ours, failure-aware)  38.479               13.98           1.0                    1.0       0.018          0.006          21.628    41.172             15.577
+-- Wilcoxon vs QoS-MDPSO (paired by n_tasks, seed)
+   QA-QoS-MDPSO success_rate         median diff   -0.000  p = 2.08e-01
+   QA-QoS-MDPSO lost_tasks           median diff   +0.002  p = 2.13e-01
+   QA-QoS-MDPSO eff_makespan_h       median diff   -1.857  p = 9.92e-05
+   QA-QoS-MDPSO eff_cost             median diff   +0.179  p = 3.81e-02
+   QA-QoS-MDPSO eff_deadline_miss    median diff   -3.698  p = 1.47e-06
+   FA-QoS-MDPSO success_rate         median diff   +0.000  p = 1.68e-01
+   FA-QoS-MDPSO lost_tasks           median diff   +0.000  p = 2.42e-01
+   FA-QoS-MDPSO eff_makespan_h       median diff   -1.270  p = 4.91e-03
+   FA-QoS-MDPSO eff_cost             median diff   +0.118  p = 4.83e-02
+   FA-QoS-MDPSO eff_deadline_miss    median diff   -2.567  p = 4.78e-06
+-- Correlation across all runs: TC vs success_rate  r = 0.253 (TC per task)

@@ -1,0 +1,67 @@
+
+===== LENGTH: mean over all settings and seeds =====
+                     makespan_h      tec      tc  deadline_miss_true  deadline_miss_paper  budget_miss  paper_fitness  runtime_s
+algorithm                                                                                                                       
+Min-Min                  25.479  112.685  25.013              47.000                2.762       25.612         37.298      0.001
+DPSO                     67.889  116.389  29.173              56.075                6.862       32.188         51.213      0.064
+QoS-MDPSO                59.491  110.610  30.672              60.912                2.925       22.950         43.229      0.195
+QA-QoS-MDPSO (ours)      56.949  112.505  28.047              50.688                3.600       22.950         46.481      0.198
+
+-- QoS-MDPSO vs DPSO (avg % improvement over settings; paper reports 19.69 / 4.39 / 7.04 for MS/TEC/TC)
+   makespan_h     14.53 %
+   tec             4.90 %
+   tc              5.28 %
+-- OURS vs QoS-MDPSO (avg % improvement over settings)
+   makespan_h              5.62 %
+   tec                    -1.17 %
+   tc                     -8.30 %
+   deadline_miss_true     27.37 %
+   budget_miss            -1.70 %
+-- Wilcoxon signed-rank, OURS vs QoS-MDPSO, paired runs (n=80)
+   makespan_h           median diff   -1.943  p = 4.30e-02
+   tec                  median diff    1.015  p = 6.35e-03
+   tc                   median diff   -2.373  p = 3.86e-06
+   deadline_miss_true   median diff   -7.000  p = 1.17e-10
+   budget_miss          median diff   -1.000  p = 5.31e-01
+
+===== TASKS: mean over all settings and seeds =====
+                     makespan_h     tec      tc  deadline_miss_true  deadline_miss_paper  budget_miss  paper_fitness  runtime_s
+algorithm                                                                                                                      
+Min-Min                   9.320  39.555  19.063                3.80                 0.34        17.76          9.599      0.001
+DPSO                     24.381  41.343  23.454               22.66                 1.26        24.30         13.467      0.057
+QoS-MDPSO                22.571  39.177  23.186               26.66                 0.46        16.94         10.950      0.181
+QA-QoS-MDPSO (ours)      19.115  38.702  20.400               15.48                 0.44        13.68         11.495      0.183
+
+-- QoS-MDPSO vs DPSO (avg % improvement over settings; paper reports 14.08 / 2.74 / 2.89 for MS/TEC/TC)
+   makespan_h      5.04 %
+   tec             5.09 %
+   tc             -2.13 %
+-- OURS vs QoS-MDPSO (avg % improvement over settings)
+   makespan_h             17.06 %
+   tec                     1.26 %
+   tc                    -11.70 %
+   deadline_miss_true     58.94 %
+   budget_miss            22.30 %
+-- Wilcoxon signed-rank, OURS vs QoS-MDPSO, paired runs (n=50)
+   makespan_h           median diff   -2.101  p = 1.19e-03
+   tec                  median diff   -0.041  p = 2.59e-01
+   tc                   median diff   -2.533  p = 4.27e-07
+   deadline_miss_true   median diff   -8.000  p = 4.39e-06
+   budget_miss          median diff   -0.500  p = 2.49e-02
+
+===== LAMBDA SENSITIVITY (default setting, 10 seeds) =====
+      makespan_h    tec     tc  deadline_miss_true  budget_miss
+lam                                                            
+0.5        23.27  50.53  27.33                23.2         26.2
+1.0        22.81  49.74  27.50                22.5         22.2
+2.0        27.69  49.32  26.75                20.4         20.4
+5.0        26.80  49.43  25.06                14.6         19.6
+10.0       23.38  48.40  25.99                13.2         16.1
+
+Default setting means:
+                     makespan_h    tec     tc  deadline_miss_true  deadline_miss_paper  budget_miss
+algorithm                                                                                          
+Min-Min                   11.40  50.18  24.93                 4.2                  0.7         25.3
+DPSO                      33.80  52.66  30.90                35.5                  1.7         34.2
+QoS-MDPSO                 26.62  50.04  31.30                37.6                  0.6         25.3
+QA-QoS-MDPSO (ours)       22.81  49.74  27.50                22.5                  0.4         22.2
