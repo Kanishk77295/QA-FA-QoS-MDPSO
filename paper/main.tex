@@ -45,7 +45,7 @@
 
 \affil[1]{\orgdiv{Department of Information Technology}, \orgname{Netaji Subhas University of Technology, Main Campus}, \orgaddress{\city{Delhi}, \country{India}}}
 
-\abstract{Task scheduling on Infrastructure-as-a-Service clouds is a constrained multi-objective problem in which the finish time, the rental cost and the reliability of a schedule must be balanced under per-task deadlines and budgets. Ouyang and Zhang (2025) proposed QoS-MDPSO, a discrete particle swarm optimizer that minimizes makespan and cost and maximizes total credibility. We re-implemented it together with its baselines (DPSO and Min-Min) and examined its model in detail. Its deadline test ignores queueing on a single-core virtual machine: at the default setting it reports 0.6 missed deadlines where 37.6 of 100 tasks actually finish late. We identify six further issues in its fitness function, search mechanisms and reporting. We contribute (i) a queue-aware evaluator that executes the tasks of every VM in earliest-deadline-first order; (ii) QA-QoS-MDPSO, which keeps the search unchanged and replaces only the fitness with a queue-aware, normalized, additively penalized one; (iii) a one-at-a-time ablation of the five QoS-MDPSO mechanisms with evaluation-count accounting; and (iv) a Monte Carlo failure model in which credibility is the per-attempt success probability, together with a failure-aware fitness (FA-QoS-MDPSO). Over ten seeds per setting, QA-QoS-MDPSO reduces true deadline misses by 27.4\% and 58.9\% (task-length and task-count sweeps) and makespan by 5.6\% and 17.1\% relative to QoS-MDPSO, but lowers total credibility by 8.3\% and 11.7\%. Credibility strongly predicts task survival under failures (Pearson $r=0.889$); FA-QoS-MDPSO completes the most tasks (84.3\% against 78.8\% for QoS-MDPSO). We also report results unfavorable to the original method: a textbook Min-Min beats every PSO variant on makespan and true deadline misses, one mechanism (spbest) degrades the original fitness, and QoS-MDPSO uses three times the evaluation budget of DPSO.}
+\abstract{Task scheduling on Infrastructure-as-a-Service clouds is a constrained multi-objective problem in which the finish time, the rental cost and the reliability of a schedule must be balanced under per-task deadlines and budgets. Ouyang and Zhang (2025) proposed QoS-MDPSO, a discrete particle swarm optimizer that minimizes makespan and cost and maximizes total credibility. It is, to our knowledge, the first PSO scheduler to combine these three objectives with deadline and budget constraints for independent tasks. We re-implemented it together with its baselines (DPSO and Min-Min) and built on it. Its deadline test compares a task's execution time with its deadline and therefore does not capture queueing on a single-core virtual machine: at the default setting it counts 0.6 missed deadlines where 37.6 of 100 tasks actually finish late. We identify six further points in its fitness function, search mechanisms and reporting that can be strengthened. We contribute (i) a queue-aware evaluator that executes the tasks of every VM in earliest-deadline-first order; (ii) QA-QoS-MDPSO, which keeps the search unchanged and replaces only the fitness with a queue-aware, normalized, additively penalized one; (iii) a one-at-a-time ablation of the five QoS-MDPSO mechanisms with evaluation-count accounting; and (iv) a Monte Carlo failure model in which credibility is the per-attempt success probability, together with a failure-aware fitness (FA-QoS-MDPSO). Over ten seeds per setting, QA-QoS-MDPSO reduces true deadline misses by 27.4\% and 58.9\% (task-length and task-count sweeps) and makespan by 5.6\% and 17.1\% relative to QoS-MDPSO, but lowers total credibility by 8.3\% and 11.7\%. Credibility strongly predicts task survival under failures (Pearson $r=0.889$); FA-QoS-MDPSO completes the most tasks (84.3\% against 78.8\% for QoS-MDPSO). We also report results that qualify the original method: a textbook Min-Min beats every PSO variant on makespan and true deadline misses, one mechanism (spbest) degrades the original fitness, and QoS-MDPSO uses three times the evaluation budget of DPSO.}
 
 \keywords{Cloud task scheduling, Particle swarm optimization, Deadline and budget constraints, Queue-aware evaluation, Credibility, Failure-aware scheduling, Ablation, Reproducibility}
 
@@ -60,9 +60,9 @@ The problem is also combinatorially hard. With $n$ tasks and $m$ VMs there are $
 
 Ouyang and Zhang \citeyearpar{ouyang2025} recently proposed QoS-MDPSO (Quality-of-Service-guided Multi-objective Discrete PSO). It minimizes makespan and total execution cost and maximizes total credibility, subject to a deadline and a budget for every task. On top of standard discrete PSO it adds five mechanisms: a chaotic non-linear inertia weight, diversity-enhanced personal-best learning (spbest), a population-mean ``mainstream'' attractor (mbest), an adaptive position update and replacement of the worst particle. Against DPSO the authors report a 19.69\% shorter makespan, 4.39\% lower cost and 7.04\% higher total credibility in a task-length experiment, and 14.08\%, 2.74\% and 2.89\% in a task-count experiment.
 
-The central claim of \citet{ouyang2025} is that its schedules complete tasks on time and within budget. Its deadline test (Eq.~9 of \citet{ouyang2025}), however, compares each task's \emph{execution time} with its deadline. Every VM in the model has a single processing unit, so tasks assigned to the same VM run one after another and a task's \emph{completion time} includes the time it spends waiting. A schedule can pass Eq.~9 for every task and still miss most deadlines. In addition, the fitness function (Eq.~11 of \citet{ouyang2025}) sums hours, dollars and a unitless credibility score with fixed weights, and enters the constraints only through a divisor that lies between 1 and 2.
+The work of \citet{ouyang2025} is a valuable step: it is, to our knowledge, the first PSO-based scheduler for independent tasks that optimizes makespan, cost and credibility together under per-task deadlines and budgets, and its mechanisms are well motivated by the adaptive PSO literature. We use it as the starting point of this study and aim to extend it rather than to replace it. Its central goal is that schedules complete tasks on time and within budget. Its deadline test (Eq.~9 of \citet{ouyang2025}) compares each task's \emph{execution time} with its deadline; Every VM in the model has a single processing unit, so tasks assigned to the same VM run one after another and a task's \emph{completion time} includes the time it spends waiting. A schedule can pass Eq.~9 for every task and still miss most deadlines. In addition, the fitness function (Eq.~11 of \citet{ouyang2025}) sums hours, dollars and a unitless credibility score with fixed weights, and enters the constraints only through a divisor that lies between 1 and 2.
 
-This work began as a reproduction of \citet{ouyang2025} for a cloud computing course and grew into an analysis of its model. We ask four research questions:
+This work began as a reproduction of \citet{ouyang2025} for a cloud computing course and grew into an extension of its model. We ask four research questions:
 \begin{enumerate}
 \item[\textbf{RQ1}] Can the main claims of \citet{ouyang2025} be reproduced independently?
 \item[\textbf{RQ2}] How large is the gap between the paper's deadline check and the true, queue-aware deadline misses, and does a queue-aware fitness close it?
@@ -70,7 +70,7 @@ This work began as a reproduction of \citet{ouyang2025} for a cloud computing co
 \item[\textbf{RQ4}] Does credibility predict surviving VM failures, and can a failure-aware fitness do better?
 \end{enumerate}
 
-\textbf{Contributions.} (1) A seeded, open reimplementation of the environment, DPSO, Min-Min and QoS-MDPSO in which every parameter is labelled as taken from \citet{ouyang2025} or assumed. (2) An analysis identifying seven issues in \citet{ouyang2025}, chief among them the queue-blind deadline test. (3) QA-QoS-MDPSO, a queue-aware normalized fitness that leaves the search unchanged. (4) A per-mechanism ablation with evaluation-count accounting. (5) A failure model that gives credibility an operational meaning, and FA-QoS-MDPSO, a failure-aware fitness. Negative and mixed results are reported alongside positive ones. The complete source code, data and scripts are available in the project repository (Section~\ref{sec:avail}).
+\textbf{Contributions.} (1) A seeded, open reimplementation of the environment, DPSO, Min-Min and QoS-MDPSO in which every parameter is labelled as taken from \citet{ouyang2025} or assumed. (2) An analysis identifying seven limitations of the base model that can be strengthened, chief among them the queue-blind deadline test. (3) QA-QoS-MDPSO, a queue-aware normalized fitness that leaves the search unchanged. (4) A per-mechanism ablation with evaluation-count accounting. (5) A failure model that gives credibility an operational meaning, and FA-QoS-MDPSO, a failure-aware fitness. Mixed and qualifying results are reported alongside positive ones. The complete source code, data and scripts are available in the project repository (Section~\ref{sec:avail}).
 
 The rest of the paper is organized as follows. Section~\ref{sec2} reviews background and related work. Section~\ref{sec3} describes the system model and the base algorithm. Section~\ref{sec4} analyses the issues in the base paper with a worked example. Section~\ref{sec5} presents our methods, Section~\ref{sec6} the implementation and experimental setup, and Section~\ref{sec7} the results. Section~\ref{sec8} discusses the findings and their limitations and Section~\ref{sec9} concludes.
 
@@ -230,7 +230,7 @@ Fig.~\ref{fig:flow} shows the resulting loop and Algorithm~\ref{alg:psoloop} lis
 \end{algorithm}
 
 %% ------------------------------------------------------------------
-\section{Analysis of the base paper}\label{sec4}
+\section{Limitations of the base model}\label{sec4}
 %% ------------------------------------------------------------------
 \subsection{Worked example: why Eq.~9 misses late tasks}\label{sec4.1}
 Consider two VMs, VM1 (200 MIPS) and VM2 (100 MIPS), and three tasks of 400, 200 and 600 MI. On VM1 they take 2, 1 and 3~s; on VM2 4, 2 and 6~s. Suppose VM1 runs T1 then T2 and VM2 runs T3 (Fig.~\ref{fig:example}), and T2 has a deadline of 2.5~s. T2 starts only when T1 finishes, at 2~s, and completes at 3~s, so it is late. Eq.~9 instead checks T2's own execution time, $1\ \mathrm{s}\le 2.5\ \mathrm{s}$, and counts it as on time. The longer a VM's queue, the more tasks are misjudged in this way; the effect grows with the number of tasks and with task length.
@@ -243,11 +243,11 @@ Consider two VMs, VM1 (200 MIPS) and VM2 (100 MIPS), and three tasks of 400, 200
 
 The same example shows two properties used later. Even with only $2^3=8$ possible schedules the objectives conflict: the fastest schedule (T2 and T3 on VM1 and T1 on VM2, makespan 4~s) is not the cheapest (everything on VM2). And Min-Min, applied greedily, places all three tasks on VM1 (makespan 6~s), showing that greedy choices need not be optimal on small instances even when, as we will see, they are strong on large ones.
 
-\subsection{Seven issues}\label{sec4.2}
-Table~\ref{tab:issues} lists the issues we found in \citet{ouyang2025}. I1 affects the paper's central claim and is the focus of our main contribution; I2 and I3 are fixed by the same new fitness; I5 and I6 are examined by the ablation; I7 is handled by stating every assumption and testing significance.
+\subsection{Seven limitations and how we address them}\label{sec4.2}
+Table~\ref{tab:issues} lists the limitations we found in the base model of \citet{ouyang2025}; they are typical of a first formulation of a new problem and are straightforward to address. I1 affects the paper's central claim and is the focus of our main contribution; I2 and I3 are fixed by the same new fitness; I5 and I6 are examined by the ablation; I7 is handled by stating every assumption and testing significance.
 
 \begin{table}[!t]
-\caption{Issues identified in \citet{ouyang2025} and how this work treats them}\label{tab:issues}
+\caption{Limitations of the base model \citep{ouyang2025} and how this work treats them}\label{tab:issues}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}llp{3.9cm}p{2.5cm}p{2.1cm}@{}}
@@ -257,10 +257,10 @@ Table~\ref{tab:issues} lists the issues we found in \citet{ouyang2025}. I1 affec
 I1 & Eq.~9 & Deadline compares execution time with $d_i$, ignoring queueing on a single-core VM & Violations under-counted about 60$\times$ at default (0.6 vs 37.6) & Queue-aware evaluator, QA fitness\\
 I2 & Eq.~11 & Penalty divisor lies in $[1,2]$; with a negative numerator, violations improve the score & Constraints barely enforced, sometimes rewarded & Additive penalty\\
 I3 & Eq.~11 & Hours, dollars and unitless credibility added with equal weights & Weights lose their meaning & Normalization\\
-I4 & Eq.~11 & Printed signs minimize credibility; Table~4 of \citet{ouyang2025} shows the corrected form was used & Internal inconsistency & Corrected form used\\
+I4 & Eq.~11 & Printed signs minimize credibility; Table~4 of \citet{ouyang2025} shows the corrected form was used & Minor inconsistency & Corrected form used\\
 I5 & Eqs.~13, 21 & $w$ rises with $t$, opposite to the text; Eq.~21 swaps the exploration/exploitation rules named in the text & Mechanisms may not act as described & Ablation\\
 I6 & Eqs.~16, 18, 23 & VM indices averaged and scaled as numbers; 3$\times$ the fitness evaluations of DPSO & Biased search; unequal budget & Ablation, evaluation counts\\
-I7 & Tables 3, 9, 10 & Tables 9 and 10 identical; swarm size, iterations, budgets, weights, runs unreported; no tests & Not exactly reproducible & Stated assumptions, 10 seeds, Wilcoxon\\
+I7 & Tables 3, 9, 10 & Tables 9 and 10 identical; swarm size, iterations, budgets, weights, runs unreported; no tests & Hard to reproduce exactly & Stated assumptions, 10 seeds, Wilcoxon\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -271,7 +271,7 @@ I7 & Tables 3, 9, 10 & Tables 9 and 10 identical; swarm size, iterations, budget
 
 \paragraph{I4: printed signs.} Eq.~11 of \citet{ouyang2025} is printed as $\alpha\mathrm{MS}+\beta\mathrm{TC}-\gamma\mathrm{TEC}$, which would minimize credibility and reward cost. The paper's own Table~4 shows that the corrected form was computed: for task length $2\times10^{6}$ MI, QoS-MDPSO has makespan 11.94, cost 25.26 and credibility 32.04 (Tables 5--7 of \citet{ouyang2025}) and fitness 1.418. The corrected numerator $(11.94+25.26-32.04)/3=1.72$ implies a divisor of 1.21, which is valid. The printed form gives 6.24, which would require a divisor of 4.40, impossible because the divisor never exceeds 2.
 
-\paragraph{I5: mechanisms that contradict their description.} Section~5.3 of \citet{ouyang2025} says the inertia weight should be large early (exploration) and small late (exploitation), but Eq.~13 adds the term $t(w_{\max}-w_{\min})/T_{\max}$, so $w$ rises from about 0--0.4 at the start to 0.5--0.9 at the end. Likewise the text labels Eq.~18 as exploration and Eq.~19 as exploitation and says a particle with $p<\mathrm{rand}$ should explore, yet Eq.~21 applies Eq.~19 when $p<\mathrm{rand}$. We implement the equations as printed and test their effect in the ablation.
+\paragraph{I5: mechanisms whose equations differ from their description.} Section~5.3 of \citet{ouyang2025} says the inertia weight should be large early (exploration) and small late (exploitation), but Eq.~13 adds the term $t(w_{\max}-w_{\min})/T_{\max}$, so $w$ rises from about 0--0.4 at the start to 0.5--0.9 at the end. Likewise the text labels Eq.~18 as exploration and Eq.~19 as exploitation and says a particle with $p<\mathrm{rand}$ should explore, yet Eq.~21 applies Eq.~19 when $p<\mathrm{rand}$. We implement the equations as printed and test their effect in the ablation.
 
 \paragraph{I6: encoding and budget.} VM indices are labels, but mbest averages them (VM~0 and VM~2 average to ``VM~1'') and the update $wX+(1-w)V$ shrinks indices toward 0. QoS-MDPSO also evaluates the fitness about three times per particle per iteration (position step, replacement step, best update) against once for DPSO, while the stated complexity $O(T_{\max}\,n\,m)$ omits the swarm size; comparing the two at equal iterations favours QoS-MDPSO.
 
@@ -336,6 +336,7 @@ All algorithms are implemented in Python~3 with NumPy, SciPy, pandas and Matplot
 \caption{System architecture of the implementation. The fitness module (highlighted) is the only component that differs between QoS-MDPSO, QA-QoS-MDPSO and FA-QoS-MDPSO.}\label{fig:arch}
 \end{figure}
 
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,frame=single,language=Python]
 def queue_aware(x, e, d, m):
     ready = np.zeros(m)
@@ -347,6 +348,7 @@ def queue_aware(x, e, d, m):
             misses += 1
     return misses, ready.max()
 \end{lstlisting}
+\end{minipage}
 
 \subsection{Parameters}\label{sec6.2}
 Task and VM parameters follow Table~3 of \citet{ouyang2025}; Table~\ref{tab:params} lists them with their sources. Parameters that \citet{ouyang2025} does not report are our assumptions. Makespan is reported in hours and cost in dollars (price per hour $\times$ seconds / 3600). With these units our magnitudes match \citet{ouyang2025}: at the default setting \citet{ouyang2025} reports a QoS-MDPSO makespan of 23.6~h and cost of \$50.3, and we obtain 26.6~h and \$50.0.
@@ -355,17 +357,17 @@ Task and VM parameters follow Table~3 of \citet{ouyang2025}; Table~\ref{tab:para
 \caption{Experimental parameters and their sources}\label{tab:params}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}p{2.6cm}p{6.4cm}p{2.2cm}@{}}
+\begin{tabular}{@{}p{2.5cm}p{6.0cm}>{\raggedright\let\\\tabularnewline}p{3.0cm}@{}}
 \toprule
 Parameter & Value & Source\\
 \midrule
-Tasks $n$ & 100 (sweep 40--120) & \citep{ouyang2025}\\
-Task length $l_i$ & $U[l-10^6,\,l+10^6]$ MI, $l=4\times10^6$ (sweep $2$--$16\times10^6$) & \citep{ouyang2025}\\
-Deadline $d_i$ & $U[3\times10^4,\,5\times10^4]$ s & \citep{ouyang2025}\\
-$f_i,\ F_j$ & $U(0,1)$ & \citep{ouyang2025}\\
-VMs $m$ & 12, each a random choice of 6 types & \citep{ouyang2025}; choice assumed\\
-Types (MIPS, \$/h) & (100, 0.06), (200, 0.12), (400, 0.24), (800, 0.48), (1300, 0.5), (2600, 1.0) & \citep{ouyang2025,guo2017}\\
-$c_1,c_2;\ w$ & 2, 2; 0.4--0.9 & \citep{ouyang2025}\\
+Tasks $n$ & 100 (sweep 40--120) & Base paper\\
+Task length $l_i$ & $U[l-10^6,\,l+10^6]$ MI, $l=4\times10^6$ (sweep $2$--$16\times10^6$) & Base paper\\
+Deadline $d_i$ & $U[3\times10^4,\,5\times10^4]$ s & Base paper\\
+$f_i,\ F_j$ & $U(0,1)$ & Base paper\\
+VMs $m$ & 12, each a random choice of 6 types & Base paper; choice assumed\\
+Types (MIPS, \$/h) & (100, 0.06), (200, 0.12), (400, 0.24), (800, 0.48), (1300, 0.5), (2600, 1.0) & Base paper; \citep{guo2017}\\
+$c_1,c_2;\ w$ & 2, 2; 0.4--0.9 & Base paper\\
 Budget $b_i$ & $U(0.8,1.2)\times$ task's mean cost over the 6 types & Assumed\\
 $N;\ T_{\max}$ & 30; 200 & Assumed\\
 $\alpha,\beta,\gamma$ & 1/3 each & Assumed\\
@@ -623,9 +625,11 @@ FA (ours) & 38.48 & 1.000 & 1.000 & 0.018 & 0.006 & 21.63 & 41.2 & 15.6\\
 %% ------------------------------------------------------------------
 \section{Discussion}\label{sec8}
 %% ------------------------------------------------------------------
-\paragraph{What survives from the original paper.} The direction of the makespan and cost gains over DPSO, the faster convergence and the benefit of four of the five mechanisms are reproduced. The magnitudes differ, the credibility gain is not reproduced in the count sweep, and the ranking against Min-Min is reversed.
+\paragraph{What the base paper gets right.} The formulation of three QoS objectives with per-task deadlines and budgets is sound and useful, and we adopt it unchanged. The five mechanisms are well motivated, and four of them measurably help (Section~\ref{sec7.5}).
 
-\paragraph{Why the evaluation model matters.} For QoS-MDPSO, 27--61 true misses per schedule against 0.5--3 counted by Eq.~9 show that the deadline constraint, as modelled in \citet{ouyang2025}, hardly affects optimization. The claim that QoS-MDPSO ensures tasks meet their deadlines is not supported under queue-aware evaluation, for either the original or our variant: at the default setting QA still leaves 22.5 of 100 tasks late, partly because the deadlines are tight relative to the total work.
+\paragraph{What is reproduced.} The direction of the makespan and cost gains over DPSO, the faster convergence and the benefit of four of the five mechanisms are reproduced. The magnitudes differ, the credibility gain is not reproduced in the count sweep, and the ranking against Min-Min is reversed.
+
+\paragraph{Why the evaluation model matters.} For QoS-MDPSO, 27--61 true misses per schedule against 0.5--3 counted by Eq.~9 show that the deadline constraint, as modelled in \citet{ouyang2025}, hardly affects optimization. The goal that tasks meet their deadlines is therefore only partly met under queue-aware evaluation, for the original algorithm and for our variant alike: at the default setting QA still leaves 22.5 of 100 tasks late, partly because the deadlines are tight relative to the total work.
 
 \paragraph{Why makespan improves with the fix.} A task meets its deadline only if its VM's queue drains in time, so penalizing true misses pushes the swarm toward balanced loads, which also lowers the makespan. Eq.~9 provides no such pressure; it only rejects a task that is too long for a slow VM on its own. This observation is in line with the general importance of queueing and tail effects in large-scale services \citep{dean2013}.
 
@@ -646,7 +650,7 @@ FA (ours) & 38.48 & 1.000 & 1.000 & 0.018 & 0.006 & 21.63 & 41.2 & 15.6\\
 %% ------------------------------------------------------------------
 \section{Conclusion and future work}\label{sec9}
 %% ------------------------------------------------------------------
-A queue-aware re-evaluation shows that the deadline handling of QoS-MDPSO is largely ineffective: its check counts under 3 misses per schedule where 27--61 tasks actually finish late. Replacing only the fitness with a normalized, queue-aware one cuts true misses by 27--59\% and makespan by 6--17\%, at the price of 8--12\% of total credibility that a single weight controls. A failure simulation shows that credibility is meaningful ($r=0.889$ with task survival) when VMs are unreliable, that sacrificing it costs completed tasks, and that a failure-aware fitness recovers the loss (84.3\% of tasks completed against 78.8\% for QoS-MDPSO). The ablation indicates that four of the five mechanisms improve the paper fitness, that spbest does not, and that part of the gain stems from more fitness evaluations. A textbook Min-Min remains the strongest method on time-based objectives.
+Building on the strong formulation of QoS-MDPSO, a queue-aware re-evaluation shows that its deadline handling has little effect on the search: its check counts under 3 misses per schedule where 27--61 tasks actually finish late. Replacing only the fitness with a normalized, queue-aware one cuts true misses by 27--59\% and makespan by 6--17\%, at the price of 8--12\% of total credibility that a single weight controls. A failure simulation shows that credibility is meaningful ($r=0.889$ with task survival) when VMs are unreliable, that sacrificing it costs completed tasks, and that a failure-aware fitness recovers the loss (84.3\% of tasks completed against 78.8\% for QoS-MDPSO). The ablation indicates that four of the five mechanisms improve the paper fitness, that spbest does not, and that part of the gain stems from more fitness evaluations. A textbook Min-Min remains the strongest method on time-based objectives.
 
 \textbf{Future work.} (1) Seed the swarm with the Min-Min schedule. (2) Compare all methods at equal numbers of fitness evaluations. (3) Use a permutation- or probability-based encoding that does not treat VM indices as numbers. (4) Model correlated failures and retries on other VMs. (5) Extend to workflows with dependencies, dynamic task arrivals and real traces, and validate on CloudSim \citep{calheiros2011} or a real cloud platform.
 
@@ -671,6 +675,7 @@ The authors thank the course instructors of the Cloud Computing course at Netaji
 \item \textbf{Author contribution:} All authors contributed equally to the implementation, experiments, analysis and writing.
 \end{itemize}
 
+\clearpage
 \begin{appendices}
 
 \section{Per-setting results}\label{secA1}
@@ -731,6 +736,8 @@ Setting & Min-Min & DPSO & QoS-MDPSO & QA (ours)\\
 \end{table}
 
 \end{appendices}
+
+\clearpage
 
 \bibliography{references}
 
